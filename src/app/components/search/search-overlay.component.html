@@ -1,0 +1,112 @@
+<div
+  #panel
+  class="overlay"
+  [class.is-open]="ui.searchOpen()"
+  role="dialog"
+  aria-modal="true"
+  aria-label="Search"
+  [attr.inert]="ui.searchOpen() ? null : ''"
+>
+  <div class="container inner">
+    <div class="field">
+      <label for="kiln-search" class="t-mono t-muted">Search Firing 04</label>
+      <div class="field__row">
+        <input
+          #input
+          id="kiln-search"
+          type="search"
+          autocomplete="off"
+          spellcheck="false"
+          placeholder="Hoodie, 480gsm, celadon…"
+          role="combobox"
+          aria-autocomplete="list"
+          aria-controls="search-results"
+          [attr.aria-expanded]="results().length > 0"
+          [attr.aria-activedescendant]="results().length ? 'sr-' + active() : null"
+          [value]="query()"
+          (input)="onInput(input.value)"
+          (keydown)="onKey($event)"
+        />
+        <button type="button" class="close t-mono" (click)="ui.searchOpen.set(false)">Esc</button>
+      </div>
+    </div>
+
+    @if (query().trim()) {
+      <p class="t-mono t-muted count" role="status">{{ results().length }} {{ results().length === 1 ? 'piece' : 'pieces' }}</p>
+      @if (results().length) {
+        <ul id="search-results" class="results" role="listbox" aria-label="Results">
+          @for (p of results(); track p.id; let i = $index) {
+            <li
+              [id]="'sr-' + i"
+              role="option"
+              class="result"
+              [class.is-active]="i === active()"
+              [attr.aria-selected]="i === active()"
+              (click)="go(p.slug)"
+              (pointerenter)="active.set(i)"
+            >
+              <div class="result__img">
+                <k-garment-image [spec]="{ kind: p.kind, colorway: p.colorways[0], front: p.defaultFront, back: p.defaultBack }" [priority]="5" />
+              </div>
+              <div>
+                <p class="result__name">{{ p.name }}</p>
+                <p class="t-mono t-muted">{{ p.gsm }}gsm · {{ p.colorways.length }} colourways</p>
+              </div>
+              <span class="t-mono">{{ p.price | price }}</span>
+            </li>
+          }
+        </ul>
+      } @else {
+        <div class="none">
+          <p class="t-display">Nothing in the kiln for “{{ query() }}”.</p>
+          <p class="t-muted">Try a garment, a weight, or a colourway.</p>
+        </div>
+      }
+    } @else {
+      <div class="idle">
+        <section>
+          <h2 class="t-mono t-muted">Popular</h2>
+          <ul class="chips">
+            @for (s of suggestions; track s) {
+              <li><button type="button" class="chip" (click)="use(s)">{{ s }}</button></li>
+            }
+          </ul>
+          @if (recent().length) {
+            <h2 class="t-mono t-muted recent-h">Recent <button type="button" class="clear" (click)="clearRecent()">Clear</button></h2>
+            <ul class="chips">
+              @for (r of recent(); track r) {
+                <li><button type="button" class="chip chip--ghost" (click)="use(r)">{{ r }}</button></li>
+              }
+            </ul>
+          }
+        </section>
+        <section>
+          <h2 class="t-mono t-muted">Shop by glaze</h2>
+          <ul class="glazes">
+            @for (c of colorways; track c.id) {
+              <li>
+                <button type="button" class="glaze" (click)="shopColor(c.id)">
+                  <span class="tile" [style.background]="c.swatch" aria-hidden="true"></span>
+                  <span>{{ c.name }}</span>
+                </button>
+              </li>
+            }
+          </ul>
+        </section>
+        <section class="idle__feature">
+          <h2 class="t-mono t-muted">In the kiln now</h2>
+          <ul class="mini">
+            @for (p of featured; track p.id) {
+              <li>
+                <a [routerLink]="['/product', p.slug]" (click)="ui.searchOpen.set(false)">
+                  <div class="mini__img"><k-garment-image [spec]="{ kind: p.kind, colorway: p.colorways[0], front: p.defaultFront, back: p.defaultBack }" /></div>
+                  <span>{{ p.name }}</span>
+                </a>
+              </li>
+            }
+          </ul>
+        </section>
+      </div>
+    }
+  </div>
+</div>

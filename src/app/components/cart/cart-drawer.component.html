@@ -1,0 +1,78 @@
+<div class="scrim" [class.is-open]="ui.cartOpen()" (click)="ui.cartOpen.set(false)" aria-hidden="true"></div>
+
+<aside
+  #panel
+  class="drawer glass"
+  [class.is-open]="ui.cartOpen()"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="bag-title"
+  [attr.inert]="ui.cartOpen() ? null : ''"
+  tabindex="-1"
+>
+  <header class="drawer__head">
+    <h2 id="bag-title" class="t-display">Bag <span class="t-mono count">{{ cart.count() }}</span></h2>
+    <button type="button" class="close" (click)="ui.cartOpen.set(false)" aria-label="Close bag">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" /></svg>
+    </button>
+  </header>
+
+  @if (cart.lines().length) {
+    <div class="ship" role="status">
+      @if (cart.freeShippingRemaining() > 0) {
+        <p class="t-mono"><span class="accent">{{ cart.freeShippingRemaining() | price }}</span> away from free shipping</p>
+      } @else {
+        <p class="t-mono">Free shipping unlocked</p>
+      }
+      <div class="ship__bar" aria-hidden="true"><span [style.transform]="'scaleX(' + cart.freeShippingProgress() + ')'"></span></div>
+    </div>
+
+    <ul class="lines">
+      @for (l of cart.lines(); track l.key) {
+        <li class="line">
+          <a class="line__img" [routerLink]="['/product', l.product.slug]" [queryParams]="{ c: l.colorwayId }" (click)="ui.cartOpen.set(false)" tabindex="-1" aria-hidden="true">
+            <k-garment-image [spec]="l.spec" [priority]="3" />
+          </a>
+          <div class="line__body">
+            <div class="line__top">
+              <a class="line__name" [routerLink]="['/product', l.product.slug]" [queryParams]="{ c: l.colorwayId }" (click)="ui.cartOpen.set(false)">{{ l.product.name }}</a>
+              <span class="t-mono">{{ l.lineTotal | price }}</span>
+            </div>
+            <p class="t-mono t-muted">{{ l.colorName }} · {{ l.size }}</p>
+            @if (l.front !== 'none' || l.back !== 'none') {
+              <p class="t-mono t-muted">
+                {{ l.front !== 'none' ? printLabels[l.front] : '' }}{{ l.front !== 'none' && l.back !== 'none' ? ' / ' : '' }}{{ l.back !== 'none' ? printLabels[l.back] : '' }}
+              </p>
+            }
+            <div class="line__actions">
+              <div class="qty" role="group" [attr.aria-label]="'Quantity for ' + l.product.name">
+                <button type="button" (click)="cart.setQty(l.key, l.qty - 1)" [attr.aria-label]="l.qty === 1 ? 'Remove' : 'Decrease quantity'">−</button>
+                <output class="t-mono" aria-live="polite">{{ l.qty }}</output>
+                <button type="button" (click)="cart.setQty(l.key, l.qty + 1)" [disabled]="l.qty >= l.maxQty" aria-label="Increase quantity">+</button>
+              </div>
+              <button type="button" class="remove t-mono" (click)="cart.remove(l.key)">Remove</button>
+            </div>
+          </div>
+        </li>
+      }
+    </ul>
+
+    <footer class="drawer__foot">
+      <dl class="sum">
+        <div><dt>Subtotal</dt><dd>{{ cart.subtotal() | price }}</dd></div>
+        <div><dt>Shipping</dt><dd>{{ cart.shipping() ? (cart.shipping() | price) : 'Free' }}</dd></div>
+        <div class="sum__total"><dt>Total</dt><dd>{{ cart.total() | price }}</dd></div>
+      </dl>
+      <button type="button" class="btn btn--block" (click)="checkout()">
+        Checkout <span aria-hidden="true">→</span>
+      </button>
+      <p class="t-mono t-muted note">Taxes included · 30-day free returns</p>
+    </footer>
+  } @else {
+    <div class="empty">
+      <p class="t-display empty__title">The kiln<br />is empty.</p>
+      <p class="t-muted">Firing 04 is open now. Every piece is made in a single run.</p>
+      <a routerLink="/shop" class="btn" (click)="ui.cartOpen.set(false)">Shop Firing 04</a>
+    </div>
+  }
+</aside>

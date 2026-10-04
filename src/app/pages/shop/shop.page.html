@@ -1,0 +1,74 @@
+<div class="page">
+  <header class="container head">
+    <p class="t-mono t-muted">Firing 04 — Autumn 26</p>
+    <h1 class="t-display" kReveal="lines">
+      <span class="reveal-mask"><span class="reveal-line">{{ activeColorName() ?? 'All' }}</span></span>
+      <span class="reveal-mask"><span class="reveal-line">pieces <sup class="t-mono count">{{ results().length }}</sup></span></span>
+    </h1>
+  </header>
+
+  <div class="filters-wrap">
+    <div class="container">
+      <div class="filters glass" role="region" aria-label="Filters">
+        <div class="group kinds" role="group" aria-label="Garment">
+          @for (k of kinds; track k.label) {
+            <button type="button" class="chip" [attr.aria-pressed]="(kind() ?? null) === k.id" (click)="setParam('kind', k.id)">{{ k.label }}</button>
+          }
+        </div>
+
+        <div class="group glazes" role="group" aria-label="Colourway">
+          @for (c of colorways; track c.id) {
+            <button
+              type="button"
+              class="glaze"
+              [style.--c]="c.swatch"
+              [attr.aria-pressed]="color() === c.id"
+              [attr.aria-label]="c.name"
+              [attr.title]="c.name"
+              (click)="toggleParam('color', c.id)"
+            ></button>
+          }
+        </div>
+
+        <div class="group sizes" role="group" aria-label="Size in stock">
+          @for (s of sizes; track s) {
+            <button type="button" class="chip chip--mono" [attr.aria-pressed]="size() === s" (click)="toggleParam('size', s)">{{ s }}</button>
+          }
+        </div>
+
+        <label class="sort">
+          <span class="visually-hidden">Sort by</span>
+          <select [value]="activeSort()" (change)="setParam('sort', $any($event.target).value === 'featured' ? null : $any($event.target).value)">
+            @for (s of sorts; track s.id) {
+              <option [value]="s.id" [selected]="s.id === activeSort()">{{ s.label }}</option>
+            }
+          </select>
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <section class="container" aria-live="polite">
+    <p class="visually-hidden">{{ results().length }} products shown</p>
+    @if (results().length) {
+      <ul class="grid">
+        @for (p of results(); track p.id; let i = $index) {
+          <li class="cell" [class.cell--feature]="isFeature(i)">
+            <k-product-card [product]="p" [index]="i" [feature]="isFeature(i)" [initialColor]="color() ?? null" />
+          </li>
+        }
+      </ul>
+    } @else {
+      <div class="empty">
+        <p class="t-display">Nothing matches.</p>
+        <p class="t-muted">That combination sold out in this firing.</p>
+        <button type="button" class="btn btn--ghost" (click)="clear()">Clear filters</button>
+      </div>
+    }
+    @if (hasFilters() && results().length) {
+      <div class="clear-row">
+        <button type="button" class="t-mono link-line" (click)="clear()">Clear all filters</button>
+      </div>
+    }
+  </section>
+</div>

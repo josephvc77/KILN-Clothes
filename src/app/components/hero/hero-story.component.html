@@ -1,0 +1,140 @@
+<section class="story" [attr.data-theme]="chapter() === 'cooled' ? 'bone' : null" aria-label="Firing 04 — the collection story">
+  <!-- Sticky stage: atmosphere, wordmark, WebGL garment -->
+  <div class="stage" #stage aria-hidden="true">
+    <div class="atmos"></div>
+    <p class="wordmark t-display"><span>K</span><span>I</span><span>L</span><span>N</span></p>
+    @if (use3D()) {
+      <canvas
+        #canvas
+        class="canvas"
+        [class.is-ready]="sceneReady()"
+        [class.is-draggable]="chapter() === 'cooled'"
+        (pointerdown)="onPointerDown($event)"
+        (pointermove)="onPointerMove($event)"
+        (pointerup)="onPointerUp($event)"
+        (pointercancel)="onPointerUp($event)"
+      ></canvas>
+      @if (!sceneReady()) {
+        <div class="loader"><span class="t-mono">Heating kiln</span><span class="loader__bar"></span></div>
+      }
+    } @else {
+      <div class="still">
+        <k-garment-image [spec]="fallbackSpec()" [view]="fallbackView()" [priority]="9" />
+      </div>
+    }
+  </div>
+
+  <!-- 00 — Hero -->
+  <article #chapterEl class="chapter chapter--hero" [class.is-active]="chapter() === 'hero'">
+    <div class="hero-copy">
+      <p class="t-mono eyebrow" data-intro><span class="accent">●</span> Firing 04 — Out now</p>
+      <h1 class="hero-title" data-intro>Fired,<br />not made.</h1>
+      <p class="hero-lede" data-intro>
+        Heavyweight tees and hoodies in 300–480gsm loopback cotton. Garment-dyed and tumbled at heat, so they arrive already shrunk.
+      </p>
+    </div>
+    <div class="hero-buy" data-intro>
+      <div class="hero-buy__product">
+        <span class="t-mono t-muted">{{ tee.name }}</span>
+        <span class="t-mono">{{ tee.price | price }}</span>
+      </div>
+      <a routerLink="/shop" class="btn" kMagnetic>Shop Firing 04 <span aria-hidden="true">→</span></a>
+      <a [routerLink]="['/product', tee.slug]" class="btn btn--ghost">View the tee</a>
+    </div>
+    <div class="hero-meta t-mono" data-intro>
+      <span>Cone 06 → Cone 10</span>
+      <span>300 — 480 gsm</span>
+      <span class="scroll-cue">Scroll <i aria-hidden="true"></i></span>
+    </div>
+  </article>
+
+  <!-- 01 — Raw -->
+  <article #chapterEl class="chapter chapter--left" [class.is-active]="chapter() === 'raw'">
+    <div class="copy">
+      <p class="t-mono idx"><span class="accent">01</span> — Raw</p>
+      <h2 class="t-display">300 grams<br />per square metre.</h2>
+      <p>
+        Combed organic cotton, knitted slowly on loop-wheel machines. That's twice the weight of a standard tee, and it
+        still drapes.
+      </p>
+      <dl class="specs t-mono">
+        <div><dt>Yarn</dt><dd>20/1 combed</dd></div>
+        <div><dt>Knit</dt><dd>Single jersey</dd></div>
+        <div><dt>Weight</dt><dd>300 gsm</dd></div>
+      </dl>
+    </div>
+  </article>
+
+  <!-- 02 — Fired -->
+  <article #chapterEl class="chapter chapter--left" [class.is-active]="chapter() === 'fired'">
+    <div class="copy">
+      <p class="t-mono idx"><span class="accent">02</span> — Fired</p>
+      <h2 class="t-display">Tumbled at heat<br />until it can't shrink.</h2>
+      <p>
+        Every garment is dyed after sewing and dried at 80°C. What we ship is what you'll wear after the hundredth wash.
+        The chart on the back is the real firing schedule for this drop.
+      </p>
+    </div>
+  </article>
+
+  <!-- 03 — Glaze -->
+  <article #chapterEl class="chapter chapter--right chapter--tall" [class.is-active]="chapter() === 'glaze'">
+    <div class="copy">
+      <p class="t-mono idx"><span class="accent">03</span> — Glaze</p>
+      <h2 class="t-display">Four glazes.<br />One firing.</h2>
+      <ol class="glaze-list">
+        @for (c of glazeOrder; track c.id; let i = $index) {
+          <li [class.is-on]="i === glazeIndex()">
+            <span class="glaze-list__tile" [style.background]="c.swatch" aria-hidden="true"></span>
+            <span class="glaze-list__name">{{ c.name }}</span>
+            <span class="t-mono t-muted glaze-list__note">{{ c.note }}</span>
+          </li>
+        }
+      </ol>
+    </div>
+  </article>
+
+  <!-- 04 — Worn -->
+  <article #chapterEl class="chapter chapter--left" [class.is-active]="chapter() === 'worn'">
+    <div class="copy">
+      <p class="t-mono idx"><span class="accent">04</span> — Worn</p>
+      <h2 class="t-display">480gsm.<br />It doesn't move<br />unless you do.</h2>
+      <p>The Kiln Hoodie is our heaviest piece: unbrushed loopback, a double-layer hood that stands on its own, and a long rib hem.</p>
+    </div>
+  </article>
+
+  <!-- 05 — Cooled: the showcase / buy -->
+  <article #chapterEl class="chapter chapter--right chapter--showcase" [class.is-active]="chapter() === 'cooled'">
+    <div class="showcase glass">
+      <div class="showcase__head">
+        <p class="t-mono idx"><span class="accent">05</span> — Out of the kiln</p>
+        @if (hoodie.limited) {
+          <p class="t-mono limited">{{ hoodie.limited }} made</p>
+        }
+      </div>
+      <h2 class="showcase__title">{{ hoodie.name }}</h2>
+      <p class="showcase__price">
+        <span>{{ hoodie.price | price }}</span>
+        <span class="t-mono t-muted">{{ hoodie.gsm }}gsm loopback</span>
+      </p>
+
+      <k-colorway-picker [colorways]="hoodie.colorways" [selected]="showColor()" (select)="onShowColor($event)" />
+      <k-size-picker [options]="sizeOptions()" [selected]="showSize()" [error]="sizeError()" (select)="onShowSize($event)" />
+
+      <div class="showcase__actions">
+        <button type="button" class="btn" [class.is-added]="justAdded()" (click)="addShowcase($event)" kMagnetic>
+          @if (justAdded()) { ✓ Added to bag } @else { Add to bag — {{ hoodie.price | price }} }
+        </button>
+        <a [routerLink]="['/product', hoodie.slug]" [queryParams]="{ c: showColor() }" class="btn btn--ghost">Details</a>
+      </div>
+
+      @if (use3D()) {
+        <div class="rotate">
+          <button type="button" class="rotate__btn" (click)="rotate(-1)" aria-label="Rotate garment left">←</button>
+          <span class="t-mono t-muted">Drag to rotate</span>
+          <button type="button" class="rotate__btn" (click)="rotate(1)" aria-label="Rotate garment right">→</button>
+        </div>
+      }
+    </div>
+  </article>
+</section>

@@ -1,0 +1,90 @@
+<article class="card" (pointerenter)="hovering.set(true)" (pointerleave)="hovering.set(false); quickOpen.set(false)">
+  <div class="media" [style.--swatch]="colorway().swatch">
+    <a class="media__link" [routerLink]="['/product', product().slug]" [queryParams]="{ c: colorway().id }" [attr.aria-label]="product().name + ', ' + colorway().name + ', ' + (product().price | price)">
+      <k-garment-image class="view view--front" [class.is-off]="hovering() && hasBackPrint()" [spec]="spec()" view="front" [priority]="feature() ? 2 : 1" [alt]="product().name + ' in ' + colorway().name + ', front'" />
+      @if (hasBackPrint()) {
+        <k-garment-image class="view view--back" [class.is-on]="hovering()" [spec]="spec()" view="back" [alt]="product().name + ' in ' + colorway().name + ', back'" />
+      }
+    </a>
+
+    <div class="media__top">
+      <span class="t-mono idx">{{ number() }}</span>
+      @if (product().isNew) {
+        <span class="t-mono tag">New</span>
+      }
+      @if (product().limited) {
+        <span class="t-mono tag tag--ember">{{ product().limited }} made</span>
+      }
+      <button
+        type="button"
+        class="save"
+        [class.is-saved]="saved()"
+        [attr.aria-pressed]="saved()"
+        [attr.aria-label]="(saved() ? 'Remove ' : 'Save ') + product().name + (saved() ? ' from saved' : '')"
+        (click)="toggleSave()"
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10Z" /></svg>
+      </button>
+    </div>
+
+    <div class="quick" [class.is-open]="quickOpen()">
+      @if (!quickOpen()) {
+        <button type="button" class="quick__trigger glass glass--pill" (click)="quickOpen.set(true)">
+          <span class="t-mono">Quick add</span>
+          <span aria-hidden="true">+</span>
+        </button>
+      } @else {
+        <div class="quick__sizes glass" role="group" [attr.aria-label]="'Choose a size to add ' + product().name">
+          @for (s of sizes(); track s.size) {
+            <button
+              type="button"
+              class="size t-mono"
+              [class.is-low]="s.state === 'low'"
+              [class.is-added]="added() === s.size"
+              [disabled]="s.state === 'out'"
+              [attr.aria-label]="s.size + (s.state === 'out' ? ', sold out' : s.state === 'low' ? ', low stock' : '')"
+              (click)="quickAdd(s.size, $event)"
+            >
+              @if (added() === s.size) { ✓ } @else { {{ s.size }} }
+            </button>
+          }
+        </div>
+      }
+    </div>
+  </div>
+
+  <div class="meta">
+    <div class="meta__row">
+      <h3 class="name">
+        <a [routerLink]="['/product', product().slug]" [queryParams]="{ c: colorway().id }">{{ product().name }}</a>
+      </h3>
+      <p class="price">
+        @if (product().compareAt) {
+          <s class="t-muted"><span class="visually-hidden">Was </span>{{ product().compareAt | price }}</s>
+        }
+        <span>{{ product().price | price }}</span>
+      </p>
+    </div>
+    <div class="meta__row meta__row--sub">
+      <p class="t-mono t-muted">{{ product().gsm }}gsm · {{ colorway().name }}</p>
+      @if (lowStock(); as low) {
+        <p class="t-mono stock">{{ low }}</p>
+      }
+    </div>
+    <div class="swatches" role="radiogroup" [attr.aria-label]="product().name + ' colourways'">
+      @for (c of product().colorways; track c.id) {
+        <button
+          type="button"
+          role="radio"
+          class="swatch"
+          [attr.aria-checked]="c.id === colorway().id"
+          [attr.aria-label]="c.name"
+          [attr.title]="c.name"
+          [style.--c]="c.swatch"
+          (click)="pickColor(c.id)"
+          (pointerenter)="pickColor(c.id)"
+        ></button>
+      }
+    </div>
+  </div>
+</article>

@@ -1,0 +1,207 @@
+@if (product(); as p) {
+  @if (spec(); as s) {
+    <div class="page">
+      <nav class="container crumbs t-mono" aria-label="Breadcrumb">
+        <ol>
+          <li><a routerLink="/shop">Shop</a></li>
+          <li><a routerLink="/shop" [queryParams]="{ kind: p.kind }">{{ p.kind === 'tee' ? 'Tees' : p.kind === 'hoodie' ? 'Hoodies' : p.kind === 'crew' ? 'Crews' : 'Longsleeves' }}</a></li>
+          <li aria-current="page">{{ p.name }}</li>
+        </ol>
+      </nav>
+
+      <div class="container pdp">
+        <!-- Visual -->
+        <section class="pdp__visual" aria-label="Product imagery">
+          <div class="viewer-wrap">
+            <k-product-viewer [spec]="s" [hotspots]="p.hotspots" [name]="p.name + ' in ' + s.colorway.name" />
+          </div>
+          <ul class="stills" aria-label="Still images">
+            <li><k-garment-image [spec]="s" view="front" [alt]="p.name + ' in ' + s.colorway.name + ', front'" /></li>
+            <li><k-garment-image [spec]="s" view="back" [alt]="p.name + ' in ' + s.colorway.name + ', back'" /></li>
+            <li><k-garment-image [spec]="s" view="angle" [alt]="p.name + ' in ' + s.colorway.name + ', three-quarter view'" /></li>
+          </ul>
+        </section>
+
+        <!-- Purchase -->
+        <section class="pdp__panel" aria-labelledby="product-title">
+          <div class="panel">
+            <div class="panel__tags t-mono">
+              <span>{{ p.firing }}</span>
+              <span class="t-muted">{{ p.cone }}</span>
+              @if (p.limited) {
+                <span class="accent">{{ p.limited }} made</span>
+              }
+            </div>
+
+            <h1 id="product-title" class="title">{{ p.name }}</h1>
+
+            <div class="price-row">
+              <p class="price">
+                @if (p.compareAt) {
+                  <s class="t-muted"><span class="visually-hidden">Was </span>{{ p.compareAt | price }}</s>
+                  <span class="visually-hidden">Now </span>
+                }
+                {{ p.price | price }}
+              </p>
+              <a href="#reviews" class="rating t-mono" [attr.aria-label]="'Rated ' + rating().toFixed(1) + ' out of 5 from ' + p.reviews.length + ' reviews'">
+                <span class="stars" aria-hidden="true">{{ stars(rating()) }}</span>
+                {{ rating().toFixed(1) }} · {{ p.reviews.length }}
+              </a>
+            </div>
+
+            <p class="tagline">{{ p.tagline }}</p>
+            <p class="t-mono t-muted spec-line">{{ p.gsm }}gsm · {{ p.fit }}</p>
+
+            <div class="rule"></div>
+
+            <k-colorway-picker [colorways]="p.colorways" [selected]="s.colorway.id" (select)="selectColor($event)" />
+
+            <!-- Customizer -->
+            <fieldset class="prints">
+              <legend class="t-mono"><span class="t-muted">Print</span> <span>Customise, then watch it update in 3D</span></legend>
+              <div class="prints__row">
+                <span class="t-mono t-muted prints__label">Front</span>
+                <div class="seg" role="radiogroup" aria-label="Front print">
+                  @for (id of p.frontPrints; track id) {
+                    <button type="button" role="radio" [attr.aria-checked]="front() === id" (click)="front.set(id)">{{ printLabels[id] }}</button>
+                  }
+                </div>
+              </div>
+              <div class="prints__row">
+                <span class="t-mono t-muted prints__label">Back</span>
+                <div class="seg" role="radiogroup" aria-label="Back print">
+                  @for (id of p.backPrints; track id) {
+                    <button type="button" role="radio" [attr.aria-checked]="back() === id" (click)="back.set(id)">{{ printLabels[id] }}</button>
+                  }
+                </div>
+              </div>
+            </fieldset>
+
+            <div id="size-picker">
+              <k-size-picker [options]="sizeOptions()" [selected]="size()" [error]="sizeError()" (select)="selectSize($event)">
+                <button slot="aside" type="button" class="t-mono link-line guide-btn" (click)="guideOpen.set(true)">Size guide</button>
+              </k-size-picker>
+              <p class="fit-note t-muted">
+                <span class="accent">{{ fitSummary() }}%</span> of reviewers say it fits true to size. For a closer fit, size down.
+              </p>
+            </div>
+
+            <div class="buy" #buyBlock>
+              <button type="button" class="btn buy__add" [class.is-added]="added()" [disabled]="soldOut()" (click)="addToBag($event)" kMagnetic>
+                @if (soldOut()) { Sold out in {{ s.colorway.name }} } @else if (added()) { ✓ Added to bag } @else { Add to bag — {{ p.price | price }} }
+              </button>
+              <button
+                type="button"
+                class="btn btn--ghost buy__save"
+                [class.is-saved]="saved()"
+                [attr.aria-pressed]="saved()"
+                [attr.aria-label]="saved() ? 'Remove from saved' : 'Save for later'"
+                (click)="toggleSave()"
+              >
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10Z" /></svg>
+              </button>
+              <button type="button" class="btn btn--light buy__now" [disabled]="soldOut()" (click)="addToBag($event, true)">Buy now</button>
+            </div>
+
+            <ul class="assurances t-mono">
+              <li><span aria-hidden="true">→</span> Ships in 2–4 days from Lisbon</li>
+              <li><span aria-hidden="true">→</span> Free shipping over €150</li>
+              <li><span aria-hidden="true">→</span> Free 30-day returns and exchanges</li>
+            </ul>
+
+            <div class="accordions">
+              <details open>
+                <summary>Description</summary>
+                <div class="acc">
+                  <p>{{ p.description }}</p>
+                </div>
+              </details>
+              <details>
+                <summary>Details &amp; fit</summary>
+                <div class="acc">
+                  <ul class="bullets">
+                    @for (d of p.details; track d) {
+                      <li>{{ d }}</li>
+                    }
+                  </ul>
+                </div>
+              </details>
+              <details>
+                <summary>Materials &amp; care</summary>
+                <div class="acc">
+                  <ul class="bullets">
+                    @for (m of p.materials; track m) {
+                      <li>{{ m }}</li>
+                    }
+                    @for (m of p.care; track m) {
+                      <li>{{ m }}</li>
+                    }
+                  </ul>
+                </div>
+              </details>
+              <details>
+                <summary>Shipping &amp; returns</summary>
+                <div class="acc">
+                  <p>
+                    Orders ship from our Lisbon studio within 2–4 working days. EU delivery costs €8 and is free over €150. Returns are free
+                    within 30 days, unworn and with tags. Printed-to-order combinations can be exchanged for size.
+                  </p>
+                </div>
+              </details>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- Reviews -->
+      <section id="reviews" class="container reviews" aria-labelledby="reviews-title">
+        <header class="reviews__head">
+          <h2 id="reviews-title" class="t-display">Worn in</h2>
+          <div class="reviews__score">
+            <span class="t-display">{{ rating().toFixed(1) }}</span>
+            <span class="t-mono t-muted">{{ p.reviews.length }} reviews · {{ fitSummary() }}% true to size</span>
+          </div>
+        </header>
+        <ul class="reviews__list" kReveal="fade">
+          @for (r of p.reviews; track r.author) {
+            <li class="review">
+              <p class="stars" [attr.aria-label]="r.rating + ' out of 5'">{{ stars(r.rating) }}</p>
+              <h3>{{ r.title }}</h3>
+              <p class="t-muted">{{ r.body }}</p>
+              <p class="t-mono t-muted review__meta">{{ r.author }} · {{ r.location }} · Size {{ r.size }} · {{ r.fit }}</p>
+            </li>
+          }
+        </ul>
+      </section>
+
+      <!-- Related -->
+      <section class="container related" aria-labelledby="related-title">
+        <h2 id="related-title" class="t-display">From the same firing</h2>
+        <ul class="related__grid">
+          @for (r of related(); track r.id; let i = $index) {
+            <li><k-product-card [product]="r" [index]="i" /></li>
+          }
+        </ul>
+      </section>
+
+      <!-- Mobile / scrolled sticky buy bar -->
+      <div class="bar glass" [class.is-on]="showBar()" [attr.aria-hidden]="!showBar()" [attr.inert]="showBar() ? null : ''">
+        <div class="bar__info">
+          <span class="bar__name">{{ p.name }}</span>
+          <span class="t-mono t-muted">{{ s.colorway.name }}{{ size() ? ' · ' + size() : '' }} · {{ p.price | price }}</span>
+        </div>
+        <button type="button" class="btn btn--sm" [disabled]="soldOut()" (click)="size() ? addToBag($event) : addToBag(null)">
+          {{ added() ? '✓ Added' : size() ? 'Add to bag' : 'Choose size' }}
+        </button>
+      </div>
+
+      <k-size-guide [open]="guideOpen()" [kind]="p.kind" (closed)="guideOpen.set(false)" />
+    </div>
+  }
+} @else {
+  <div class="container missing">
+    <p class="t-mono t-muted">404</p>
+    <h1 class="t-display">This piece isn't in the kiln.</h1>
+    <a routerLink="/shop" class="btn">Back to the shop</a>
+  </div>
+}

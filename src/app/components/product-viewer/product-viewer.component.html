@@ -1,0 +1,88 @@
+<div
+  class="stage"
+  #stage
+  [attr.tabindex]="use3D() ? 0 : null"
+  [attr.role]="use3D() ? 'application' : null"
+  [attr.aria-roledescription]="use3D() ? '3D product viewer' : null"
+  [attr.aria-label]="name() + ' 3D viewer. Arrow keys rotate, plus and minus zoom, 0 resets.'"
+  (keydown)="onKey($event)"
+  (wheel)="onWheel($event)"
+>
+  @if (use3D()) {
+    <canvas
+      #canvas
+      class="canvas"
+      [class.is-ready]="ready()"
+      (pointerdown)="onPointerDown($event)"
+      (pointermove)="onPointerMove($event)"
+      (pointerup)="onPointerUp($event)"
+      (pointercancel)="onPointerUp($event)"
+    ></canvas>
+
+    @if (!ready()) {
+      <div class="loading">
+        <k-garment-image [spec]="spec()" [priority]="10" [alt]="''" />
+        <span class="t-mono loading__label">Firing the model…</span>
+      </div>
+    }
+
+    <!-- Hotspots -->
+    @for (p of projected(); track p.id) {
+      @if (hotspotFor(p.id); as h) {
+        <div class="hotspot" [class.is-visible]="p.visible" [class.is-open]="openHotspot() === p.id" [style.transform]="'translate3d(' + p.x + 'px,' + p.y + 'px,0)'">
+          <button
+            type="button"
+            class="hotspot__dot"
+            [attr.aria-expanded]="openHotspot() === p.id"
+            [attr.aria-label]="h.label"
+            [attr.tabindex]="p.visible ? 0 : -1"
+            (click)="toggleHotspot(p.id)"
+          >
+            <span aria-hidden="true">+</span>
+          </button>
+          <div class="hotspot__card glass" role="note">
+            <p class="t-mono">{{ h.label }}</p>
+            <p>{{ h.detail }}</p>
+          </div>
+        </div>
+      }
+    }
+
+    @if (ready() && !hinted()) {
+      <p class="hint t-mono" aria-hidden="true">
+        <span class="hint__icon"></span>
+        Drag to rotate · Pinch to zoom
+      </p>
+    }
+  } @else {
+    <div class="still">
+      <k-garment-image [spec]="spec()" [view]="stillView()" [priority]="10" [alt]="name() + ', ' + stillView() + ' view'" />
+    </div>
+  }
+</div>
+
+<div class="controls glass" kGlassSheen role="toolbar" aria-label="Viewer controls">
+  <div class="seg" role="group" aria-label="Side">
+    <button type="button" [attr.aria-pressed]="side() === 'front'" (click)="showSide('front')">Front</button>
+    <button type="button" [attr.aria-pressed]="side() === 'back'" (click)="showSide('back')">Back</button>
+  </div>
+  @if (use3D()) {
+    <span class="sep" aria-hidden="true"></span>
+    <button type="button" class="icon" (click)="zoom(1)" aria-label="Zoom in">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6" /><path d="M11 8v6M8 11h6M16 16l4 4" /></svg>
+    </button>
+    <button type="button" class="icon" (click)="zoom(-1)" aria-label="Zoom out">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6" /><path d="M8 11h6M16 16l4 4" /></svg>
+    </button>
+    <button type="button" class="icon" (click)="reset()" aria-label="Reset view">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12a7 7 0 1 0 2.1-5" /><path d="M5 4v4h4" /></svg>
+    </button>
+  }
+  <button type="button" class="icon" (click)="toggleFullscreen()" [attr.aria-label]="fullscreen() ? 'Exit fullscreen' : 'Fullscreen'">
+    @if (fullscreen()) {
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5" /></svg>
+    } @else {
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" /></svg>
+    }
+  </button>
+</div>

@@ -1,0 +1,99 @@
+<header class="bar glass" kGlassSheen>
+  <a class="logo" routerLink="/" aria-label="KILN, home">
+    <svg viewBox="0 0 64 20" aria-hidden="true" class="logo__mark">
+      <path d="M2 2h5v7l6-7h6l-7 7.6L19.5 18h-6.2L8.6 12 7 13.6V18H2V2Zm19.5 0h5v16h-5V2Zm8.5 0h5v12.2h7.2V18H30V2Zm15 0h4.6l6.4 9V2H61v16h-4.4L50 8.8V18h-5V2Z" />
+    </svg>
+    <span class="logo__firing t-mono" aria-hidden="true">F—04</span>
+  </a>
+
+  <nav class="nav" aria-label="Primary">
+    <ul>
+      <li class="has-mega" (pointerenter)="openMega()" (pointerleave)="closeMega()">
+        <a
+          routerLink="/shop"
+          routerLinkActive="is-active"
+          [attr.aria-expanded]="megaOpen()"
+          aria-controls="mega"
+          (focus)="openMega()"
+          >Shop</a
+        >
+      </li>
+      <li><a routerLink="/shop" [queryParams]="{ kind: 'hoodie' }">Fleece</a></li>
+      <li><a routerLink="/shop" [queryParams]="{ kind: 'tee' }">Jersey</a></li>
+      <li><a routerLink="/" fragment="studio">Studio</a></li>
+    </ul>
+  </nav>
+
+  <div class="actions">
+    <button type="button" class="icon-btn search-btn" (click)="ui.openSearch()" aria-label="Search (press / )">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5" /><path d="m16 16 4.5 4.5" /></svg>
+      <span class="kbd t-mono" aria-hidden="true">/</span>
+    </button>
+    <a class="icon-btn" routerLink="/wishlist" [attr.aria-label]="'Saved items, ' + wishlist.count()">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10Z" /></svg>
+      @if (wishlist.count()) {
+        <span class="dot" aria-hidden="true"></span>
+      }
+    </a>
+    <button
+      #bagBtn
+      type="button"
+      class="bag"
+      [class.is-bump]="bump()"
+      (animationend)="bump.set(false)"
+      (click)="ui.openCart()"
+      [attr.aria-label]="'Bag, ' + cart.count() + (cart.count() === 1 ? ' item' : ' items')"
+    >
+      <span class="t-mono">Bag</span>
+      <span class="bag__count t-mono" aria-hidden="true">{{ cart.count() }}</span>
+    </button>
+    <button type="button" class="icon-btn menu-btn" (click)="toggleMenu()" [attr.aria-expanded]="ui.menuOpen()" aria-controls="mobile-menu" aria-label="Menu">
+      <span class="burger" [class.is-open]="ui.menuOpen()" aria-hidden="true"><i></i><i></i></span>
+    </button>
+  </div>
+</header>
+
+<!-- Mega menu: collection preview -->
+<div id="mega" class="mega glass" [class.is-open]="megaOpen()" (pointerenter)="openMega()" (pointerleave)="closeMega()" [attr.aria-hidden]="!megaOpen()" [attr.inert]="megaOpen() ? null : ''">
+  <div class="mega__col">
+    <p class="t-mono t-muted">Firing 04 — Autumn 26</p>
+    <ul class="mega__links">
+      <li><a routerLink="/shop">All pieces <span class="t-mono t-muted">{{ catalog.products.length }}</span></a></li>
+      <li><a routerLink="/shop" [queryParams]="{ kind: 'tee' }">Heavyweight tees</a></li>
+      <li><a routerLink="/shop" [queryParams]="{ kind: 'hoodie' }">Hoodies</a></li>
+      <li><a routerLink="/shop" [queryParams]="{ kind: 'crew' }">Crews</a></li>
+      <li><a routerLink="/shop" [queryParams]="{ kind: 'longsleeve' }">Longsleeves</a></li>
+    </ul>
+  </div>
+  <ul class="mega__feature">
+    @for (p of featured; track p.id) {
+      <li>
+        <a [routerLink]="['/product', p.slug]" class="mega__card">
+          <div class="mega__img">
+            <k-garment-image [spec]="{ kind: p.kind, colorway: p.colorways[0], front: p.defaultFront, back: p.defaultBack }" [alt]="''" />
+          </div>
+          <span class="mega__name">{{ p.name }}</span>
+          <span class="t-mono t-muted">{{ p.gsm }}gsm</span>
+        </a>
+      </li>
+    }
+  </ul>
+</div>
+
+<!-- Mobile menu -->
+<div id="mobile-menu" class="mobile" [class.is-open]="ui.menuOpen()" [attr.inert]="ui.menuOpen() ? null : ''">
+  <nav aria-label="Mobile">
+    <ol>
+      <li><a routerLink="/shop"><span class="t-mono">01</span>Shop all</a></li>
+      <li><a routerLink="/shop" [queryParams]="{ kind: 'hoodie' }"><span class="t-mono">02</span>Fleece</a></li>
+      <li><a routerLink="/shop" [queryParams]="{ kind: 'tee' }"><span class="t-mono">03</span>Jersey</a></li>
+      <li><a routerLink="/" fragment="studio"><span class="t-mono">04</span>Studio</a></li>
+      <li><a routerLink="/wishlist"><span class="t-mono">05</span>Saved ({{ wishlist.count() }})</a></li>
+    </ol>
+  </nav>
+  <p class="t-mono t-muted mobile__foot">Free shipping over €150 · Free 30-day returns</p>
+</div>
+
+@if (flyStyle(); as s) {
+  <span class="fly" [style]="s" aria-hidden="true"></span>
+}
